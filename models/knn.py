@@ -1,5 +1,6 @@
 from sklearn.model_selection import KFold, cross_val_score
-from sklearn.linear_model import LogisticRegression
+# from sklearn.linear_model import LogisticRegression # <- RIMOSSO
+from sklearn.neighbors import KNeighborsClassifier # <- AGGIUNTO
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 
@@ -13,15 +14,16 @@ test_df = pd.read_pickle('data/df_test.pkl')
 print("Scaling data...")
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+X_test_scaled = scaler.transform(X_test) 
 
 # Implementazione K-FOLD CROSS-VALIDATION (K=5)
-model = LogisticRegression(random_state=42, max_iter=1000)
+# MODIFICATO: Inizializza il modello KNN (K=9 è un buon punto di partenza)
+model = KNeighborsClassifier(n_neighbors=8, n_jobs=-1) 
 
 # Inizializza la K-Fold (K=5)
 kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
-print(f"\nEsecuzione K-Fold Cross-Validation con K=5 sul modello Regressione Logistica...")
+print(f"\nEsecuzione K-Fold Cross-Validation con K=5 sul modello KNN...") # <- MODIFICATO
 
 # Calcola il punteggio di Accuracy per ogni fold
 cv_scores = cross_val_score(model, X_train_scaled, Y_train, cv=kf, scoring='accuracy', n_jobs=-1)
@@ -53,6 +55,7 @@ submission_df = pd.DataFrame({
 })
 
 # Save the DataFrame to a .csv file
-submission_df.to_csv('fds-pokemon-battles-prediction-2025/submission.csv', index=False)
+# Assicurati che questa cartella esista, altrimenti salva in 'submission.csv'
+submission_df.to_csv('submission.csv', index=False) 
 
 print("\n'submission.csv' file created successfully!")
