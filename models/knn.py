@@ -18,7 +18,7 @@ X_test_scaled = scaler.transform(X_test)
 
 # Implementazione K-FOLD CROSS-VALIDATION (K=5)
 # MODIFICATO: Inizializza il modello KNN (K=9 è un buon punto di partenza)
-model = KNeighborsClassifier(n_neighbors=8, n_jobs=-1) 
+model = KNeighborsClassifier(n_neighbors= 9, n_jobs=-1) 
 
 # Inizializza la K-Fold (K=5)
 kf = KFold(n_splits=5, shuffle=True, random_state=42)

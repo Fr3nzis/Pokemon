@@ -10,13 +10,11 @@ Y_train = pd.read_pickle("data/Y_train.pkl")
 test_df = pd.read_pickle('data/df_test.pkl')
 
 
-
-# --- 2. SCALING DEI DATI (RIMOSSO) ---
+#SCALING DEI DATI (RIMOSSO) ---
 print("Scaling data... (Saltato, non necessario per Decision Tree)")
-# X_train_scaled = scaler.fit_transform(X_train) # <- RIMOSSO
-# X_test_scaled = scaler.transform(X_test) # <- RIMOSSO
 
-# --- 3. Implementazione K-FOLD CROSS-VALIDATION (K=5) ---
+
+# Implementazione K-FOLD CROSS-VALIDATION (K=5) ---
 
 # MODIFICATO: Inizializza il Decision Tree con Pruning (per evitare overfitting)
 model = DecisionTreeClassifier(
