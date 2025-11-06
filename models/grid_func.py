@@ -19,46 +19,54 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 
 def tune_model(model_name: str, X_train: pd.DataFrame, Y_train: pd.Series):
     """
-    Esegue la GridSearchCV per un modello specifico.
+    Esegue la GridSearchCV per un modello specifico e salva automaticamente
+    scaler e modello nella cartella 'roba', dentro la directory del file.
 
     Args:
-        model_name (str): Chiave del modello da usare (es. 'logistic_regression', 'knn').
-        X_train (pd.DataFrame): DataFrame delle feature di addestramento.
-        Y_train (pd.Series): Serie dei target di addestramento.
+        model_name (str): Nome del modello da ottimizzare (es. 'logistic_regression', 'knn').
+        X_train (pd.DataFrame): Feature di addestramento.
+        Y_train (pd.Series): Target di addestramento.
 
     Returns:
-        tuple: (best_estimator, best_params, best_score) o (None, None, None) in caso di errore.
+        tuple: (best_estimator, best_params, best_score)
     """
-    
+
     print(f"\n--- Inizio Ottimizzazione per: {model_name} ---")
 
-    # --- 1. Scaling Condizionale ---
-    # Scala i dati solo per i modelli che ne beneficiano (LogReg, KNN)
+    # ============================================================
+    # Percorso assoluto della cartella "roba"
+    # ============================================================
+    base_dir = os.path.dirname(__file__)                # percorso di questo file
+    roba_dir = os.path.join(base_dir, "roba")           # crea path a 'roba'
+    os.makedirs(roba_dir, exist_ok=True)                # crea la cartella se non esiste
+
+    # ============================================================
+    # Scaling Condizionale
+    # ============================================================
     if model_name in ['logistic_regression', 'knn']:
         print("Scaling dati di addestramento...")
         scaler = StandardScaler()
         X_train_processed = scaler.fit_transform(X_train)
-        
-        # Salviamo lo scaler per uso futuro
-        scaler_filename = f"models/{model_name}_scaler.pkl"
+
+        # Salvataggio scaler
+        scaler_filename = os.path.join(roba_dir, f"{model_name}_scaler.pkl")
         print(f"Salvataggio scaler in: {scaler_filename}")
         with open(scaler_filename, "wb") as f:
             pickle.dump(scaler, f)
-            
     else:
         print("Nessuno scaling necessario per questo modello.")
         X_train_processed = X_train
-        
 
-    # --- 2. Definizione Modelli e Griglie di Parametri ---
-    # Nota: queste griglie sono esempi. Per una ricerca reale, potresti volerle più ampie.
+    # ============================================================
+    # Definizione Modelli e Griglie di Parametri
+    # ============================================================
     models_config = {
         'logistic_regression': (
             LogisticRegression(random_state=42, max_iter=1000),
             {
                 'C': [0.01, 0.1, 1, 10],
                 'penalty': ['l1', 'l2'],
-                'solver': ['liblinear'] # 'liblinear' va bene per L1 e L2
+                'solver': ['liblinear']
             }
         ),
         'knn': (
@@ -80,7 +88,7 @@ def tune_model(model_name: str, X_train: pd.DataFrame, Y_train: pd.Series):
         'random_forest': (
             RandomForestClassifier(random_state=42),
             {
-                'n_estimators': [100, 200], # Tenuto basso per velocità
+                'n_estimators': [100, 200],
                 'max_depth': [None, 10, 20],
                 'min_samples_split': [2, 5]
             }
@@ -102,47 +110,46 @@ def tune_model(model_name: str, X_train: pd.DataFrame, Y_train: pd.Series):
         )
     }
 
-    # Controllo se il modello richiesto è nella nostra configurazione
     if model_name not in models_config:
         print(f"Errore: Modello '{model_name}' non riconosciuto.")
         print(f"Modelli supportati: {list(models_config.keys())}")
         return None, None, None
 
-    # Estrae l'estimatore e la griglia giusti
     estimator, param_grid = models_config[model_name]
 
-    # --- 3. Configurazione Cross-Validation ---
+    # ============================================================
+    # Cross-validation e Grid Search
+    # ============================================================
+    print(f"Esecuzione Grid Search (5-Fold CV) per {model_name}...")
     kf_grid = KFold(n_splits=5, shuffle=True, random_state=42)
 
-    # --- 4. Creazione ed Esecuzione GridSearchCV ---
-    print(f"Esecuzione Grid Search (5-Fold Cross-Validation) per {model_name}...")
     grid_search = GridSearchCV(
         estimator=estimator,
         param_grid=param_grid,
         scoring='accuracy',
         cv=kf_grid,
-        n_jobs=-1,  # Usa tutti i core disponibili
-        refit=True    # Refitta il modello migliore sull'intero training set
+        n_jobs=-1,
+        refit=True
     )
-    
-    # Addestramento
+
     grid_search.fit(X_train_processed, Y_train)
 
-    # --- 5. Estrazione e Salvataggio Risultati ---
     best_params = grid_search.best_params_
     best_score = grid_search.best_score_
     best_model = grid_search.best_estimator_
 
     print("\n--- Risultati Ottimizzazione ---")
     print(f"Migliori Iperparametri trovati: {best_params}")
-    print(f"Accuracy Media di Cross-Validation: {best_score:.4f}")
+    print(f"Accuracy media di CV: {best_score:.4f}")
 
-    # Salvataggio del modello migliore
-    model_filename = f"roba/{model_name}_best_model.pkl"
+    # ============================================================
+    # Salvataggio modello migliore
+    # ============================================================
+    model_filename = os.path.join(roba_dir, f"{model_name}_best_model.pkl")
     print(f"Salvataggio modello in: {model_filename}")
     with open(model_filename, "wb") as f:
         pickle.dump(best_model, f)
-        
+
+    print(f"Tutti i file salvati in: {roba_dir}")
+
     return best_model, best_params, best_score
-
-
