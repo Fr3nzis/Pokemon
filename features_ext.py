@@ -8,6 +8,14 @@ class FeatureHandler:
         self.test_data = test_data
 
     def create_advanced_features(self, data):
+        STATUS_PENALTIES = {
+            "frz": -100, # Congelamento: quasi un K.O.
+            "slp": -75,  # Sonno: disabilita completamente
+            "par": -40,  # Paralisi: penalità media statica
+            "tox": -25,  # Iperavvelenamento: danno crescente
+            "brn": -15,  # Scottatura
+            "psn": -15,  # Avvelenamento
+            "nostatus": 0}
         types = {
             "fire": ["grass", "ice", "bug", "steel"],
             "water": ["fire", "ground", "rock"],
@@ -57,13 +65,13 @@ class FeatureHandler:
             timeline = battle.get('battle_timeline', [])
             ntimeline = len(timeline)
 
-            nstatus_1 = nstatus_2 = 0
             accuracy_1 = accuracy_2 = 0
             base_power_1 = base_power_2 = 0
             n_null_moves_p1 = n_null_moves_p2 = 0
             p1_super_effective_taken = p2_lead_super_effective_taken = 0
             cumulative_boost_magnitude_diff = 0
             p1_fainted_count = p2_fainted_count = 0
+            total_status_advantage = 0
 
             for turn in timeline:
                 p1_state = turn.get("p1_pokemon_state", {})
@@ -75,11 +83,12 @@ class FeatureHandler:
                 p1_status = p1_state.get("status", "nostatus")
                 p2_status = p2_state.get("status", "nostatus")
 
+            
                 # STATUS
-                if p1_state.get("status") != "nostatus":
-                    nstatus_1 += 1
-                if p2_state.get("status") != "nostatus":
-                    nstatus_2 += 1
+                p1_turn_handicap = STATUS_PENALTIES.get(p1_status, 0)
+                p2_turn_handicap = STATUS_PENALTIES.get(p2_status, 0)
+                net_status_advantage_turn = p1_turn_handicap - p2_turn_handicap
+                total_status_advantage += net_status_advantage_turn
 
                 if p1_status == 'fnt':
                     p1_fainted_count += 1
@@ -128,9 +137,6 @@ class FeatureHandler:
             p1_coverage = len(covered_types)
 
             # NORMALIZZAZIONI
-            p1_state_norm = nstatus_1 / ntimeline if ntimeline else 0
-            p2_state_norm = nstatus_2 / ntimeline if ntimeline else 0
-            diff_status = p1_state_norm - p2_state_norm
             diff_accuracy = accuracy_1 - accuracy_2
             diff_base_power = base_power_1 - base_power_2
             norm_null_p1 = n_null_moves_p1 / ntimeline if ntimeline else 0
@@ -140,7 +146,7 @@ class FeatureHandler:
 
             # AGGIUNTA FEATURE FINALI
             features.update({
-                'diff_status': diff_status,
+                'total_status_advantage': total_status_advantage,
                 'diff_accuracy': diff_accuracy,
                 'diff_base_power': diff_base_power,
                 'p1_type_coverage': p1_coverage,
