@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from pk_functions import get_pokemon_types, is_super_effective, momentum_score,damage_features
+from pk_functions import get_pokemon_types, is_super_effective, momentum_score,damage_features, switch_difference
 class FeatureHandler:
     def __init__(self, train_data, test_data=None):
         self.train_data = train_data
@@ -155,8 +155,9 @@ class FeatureHandler:
                 'diff_null_moves': diff_null_moves,
                 'mean_boost_magnitude_diff': mean_boost_magnitude_diff,
                 'fainted_diff': p1_fainted_count - p2_fainted_count,
-                'p1_momentum_score': momentum_score(battle)
-            })
+                'p1_momentum_score': momentum_score(battle),
+                'switch_diff' : switch_difference(battle)
+                  })
 
             # DAMAGE FEATURES
             features.update(damage_features(battle))

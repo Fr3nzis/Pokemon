@@ -109,3 +109,69 @@ def damage_features(battle: dict) -> dict:
         'p1_net_damage': p1_net_damage,
         'p1_damage_ratio': p1_damage_ratio
     }
+
+def switch_difference(battle: dict) -> int:
+    """
+    Restituisce la differenza (p1_switches - p2_switches) contando solo i switch volontari
+    (cioè cambi non dovuti a faint).
+    Deve essere definita PRIMA di chiamarla nella tua funzione di feature extraction.
+    """
+
+    timeline = battle.get('battle_timeline', [])
+
+    # Pokémon inizialmente attivi (fallback se mancanti)
+    p1_active = battle.get('p1_team_details', [{}])[0].get('name') if battle.get('p1_team_details') else None
+    p2_active = battle.get('p2_lead_details', {}).get('name', None)
+
+    # Stato "precedente" per rilevare faint o hp == 0
+    # Inizializziamo hp_prev a 1 (100%) come fai nel damage_features
+    p1_prev = {'name': p1_active, 'hp_pct': 1.0, 'status': None}
+    p2_prev = {'name': p2_active, 'hp_pct': 1.0, 'status': None}
+
+    p1_switches = 0
+    p2_switches = 0
+
+    for turn in timeline:
+        p1_state = turn.get('p1_pokemon_state', {})
+        p2_state = turn.get('p2_pokemon_state', {})
+
+        p1_current = p1_state.get('name')
+        p2_current = p2_state.get('name')
+
+        # Prendiamo hp_pct e status (fallback a valori sensati se mancanti)
+        p1_hp = p1_state.get('hp_pct', p1_prev.get('hp_pct', 1.0))
+        p2_hp = p2_state.get('hp_pct', p2_prev.get('hp_pct', 1.0))
+        p1_status = p1_state.get('status', None)
+        p2_status = p2_state.get('status', None)
+
+        # --- P1: switch rilevato se nome cambia e precedente NON era fainted (status == 'fnt' o hp == 0)
+        if p1_current and p1_current != p1_prev.get('name'):
+            prev_was_fnt = (p1_prev.get('status') == 'fnt') or (p1_prev.get('hp_pct', 1.0) == 0)
+            if not prev_was_fnt:
+                p1_switches += 1
+            # aggiorna prev alla nuova entry
+            p1_prev['name'] = p1_current
+            p1_prev['hp_pct'] = p1_hp
+            p1_prev['status'] = p1_status
+        else:
+            # aggiorna solo hp/status se stesso rimane attivo (per il prossimo loop)
+            p1_prev['hp_pct'] = p1_hp
+            p1_prev['status'] = p1_status
+
+        # --- P2: stesso ragionamento
+        if p2_current and p2_current != p2_prev.get('name'):
+            prev_was_fnt = (p2_prev.get('status') == 'fnt') or (p2_prev.get('hp_pct', 1.0) == 0)
+            if not prev_was_fnt:
+                p2_switches += 1
+            p2_prev['name'] = p2_current
+            p2_prev['hp_pct'] = p2_hp
+            p2_prev['status'] = p2_status
+        else:
+            p2_prev['hp_pct'] = p2_hp
+            p2_prev['status'] = p2_status
+
+    # Ritorna solo la differenza come richiesto
+    return p1_switches - p2_switches
+
+
+
