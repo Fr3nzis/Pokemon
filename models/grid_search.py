@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import KFold, GridSearchCV
+import matplotlib.pyplot as plt
 import pickle # Libreria necessaria per salvare il modello
 
 # --- 1. CARICAMENTO DATI ---
@@ -57,3 +58,24 @@ best_model = grid_search.best_estimator_
 print("\n--- Risultati Ottimizzazione ---")
 print(f"Migliori Iperparametri trovati: {best_params}")
 print(f"Accuracy Media di Cross-Validation: {best_score:.4f}")
+
+# --- 5. PLOT DEI COEFFICIENTI PIÙ IMPORTANTI ---
+print("\nGenerazione grafico dei coefficienti più importanti...")
+
+coef = best_model.coef_.flatten()
+feature_importance = pd.DataFrame({
+    'Feature': X_train.columns,
+    'Coefficient': coef,
+    'AbsValue': abs(coef)
+}).sort_values(by='AbsValue', ascending=False)
+
+top_features = feature_importance.head(30)  # mostra le 30 più rilevanti
+
+plt.figure(figsize=(10, 6))
+plt.barh(top_features['Feature'], top_features['Coefficient'], color='steelblue')
+plt.gca().invert_yaxis()  # la più importante in alto
+plt.title('Coefficienti più importanti della Regressione Logistica')
+plt.xlabel('Valore del Coefficiente')
+plt.ylabel('Feature')
+plt.tight_layout()
+plt.show()
