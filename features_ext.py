@@ -47,7 +47,7 @@ class FeatureHandler:
             cumulative_boost_magnitude_diff = 0
             p1_fainted_count = p2_fainted_count = 0
             total_status_advantage = 0
-            #p1_cumulative_effectiveness = p2_cumulative_effectiveness = 0
+            p1_cumulative_effectiveness = p2_cumulative_effectiveness = 0
             diff_speed = 0
             p1_stab_hits = p2_stab_hits = 0
             p1_x4_hits = p2_x4_hits = 0
@@ -202,7 +202,7 @@ class FeatureHandler:
             norm_null_p2 = n_null_moves_p2 / ntimeline if ntimeline else 0
             diff_null_moves = norm_null_p2 - norm_null_p1
             mean_boost_magnitude_diff = cumulative_boost_magnitude_diff / ntimeline if ntimeline else 0
-            #diff_eff = p1_cumulative_effectiveness - p2_cumulative_effectiveness
+            diff_eff = p1_cumulative_effectiveness - p2_cumulative_effectiveness
             stab_diff = (p1_stab_hits - p2_stab_hits) / ntimeline if ntimeline else 0
             x4_eff_diff = (p1_x4_hits - p2_x4_hits) / ntimeline if ntimeline else 0
             x2_eff_diff = (p1_x2_hits - p2_x2_hits) / ntimeline if ntimeline else 0
@@ -214,20 +214,20 @@ class FeatureHandler:
             
             # AGGIUNTA FEATURE FINALI
             features.update({
-                #'diff_eff' : diff_eff,
+                'diff_eff' : diff_eff,
                 'total_status_advantage': total_status_advantage,
-                #'diff_accuracy': diff_accuracy,
+                'diff_accuracy': diff_accuracy,
                 'diff_base_power': diff_base_power,
                 #'p1_type_coverage': p1_coverage,
-                #'net_coverage_advantage': net_coverage_advantage,
+                'net_coverage_advantage': net_coverage_advantage,
                 #'p1_super_effective_taken': p1_super_effective_taken,
-                'p2_lead_super_effective_taken': p2_lead_super_effective_taken,
-                #'diff_null_moves': diff_null_moves,
-                #'mean_boost_magnitude_diff': mean_boost_magnitude_diff,
-                #'fainted_diff': p1_fainted_count - p2_fainted_count,
-                #'p1_momentum_score': momentum_score(battle),
-                #'switch_diff' : switch_difference(battle),
-                #'diff_speed_boost': diff_speed,
+                #'p2_lead_super_effective_taken': p2_lead_super_effective_taken,
+                'diff_null_moves': diff_null_moves,
+                'mean_boost_magnitude_diff': mean_boost_magnitude_diff,
+                'fainted_diff': p1_fainted_count - p2_fainted_count,
+                'p1_momentum_score': momentum_score(battle),
+                'switch_diff' : switch_difference(battle),
+                'diff_speed_boost': diff_speed,
                 #'diff_prio':diff_prio,
                 #'stab_diff': stab_diff,
                 'x4_eff_diff': x4_eff_diff,
@@ -245,7 +245,7 @@ class FeatureHandler:
                   
 
             # DAMAGE FEATURES
-            #features.update(damage_features(battle))
+            features.update(damage_features(battle))
 
             # ID e target
             features['battle_id'] = battle.get('battle_id')
