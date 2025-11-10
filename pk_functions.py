@@ -28,7 +28,7 @@ def is_super_effective(move_type: str, defender_types: list[str], type_chart: di
     return any(def_type in type_chart[move_type] for def_type in defender_types)
 
 
-def momentum_score(battle):
+def momentum_score(battle):  #verificata
     """
     Calcola un punteggio di momentum:
     - Conta i turni dove P1 infligge più danno di quanto ne subisca.
@@ -60,7 +60,7 @@ def momentum_score(battle):
     return p1_momentum_turns + (0.5 * p1_max_streak)
 
 
-def damage_features(battle: dict) -> dict:
+def damage_features(battle: dict) -> dict: #verificata
     """
     Estrae feature legate al danno netto e al rapporto danni inflitti/subiti per P1.
     """
@@ -78,30 +78,30 @@ def damage_features(battle: dict) -> dict:
         p1_state = turn_data.get("p1_pokemon_state", {})
         p2_state = turn_data.get("p2_pokemon_state", {})
 
-        p1_current_hp = p1_state.get('hp_pct', 0)
-        p2_current_hp = p2_state.get('hp_pct', 0)
+        p1_current_hp_pct = p1_state.get('hp_pct', 0)
+        p2_current_hp_pct = p2_state.get('hp_pct', 0)
         p1_current_name = p1_state.get('name')
         p2_current_name = p2_state.get('name')
 
         if p1_current_name != p1_active_pokemon:
-            p1_last_hp_pct = p1_current_hp
+            p1_last_hp_pct = p1_current_hp_pct
             p1_active_pokemon = p1_current_name
         if p2_current_name != p2_active_pokemon:
-            p2_last_hp_pct = p2_current_hp
+            p2_last_hp_pct = p2_current_hp_pct
             p2_active_pokemon = p2_current_name
 
-        p1_damage_inflicted = max(0, p2_last_hp_pct - p2_current_hp)
-        p1_damage_received = max(0, p1_last_hp_pct - p1_current_hp)
+        p1_damage_inflicted = max(0, p2_last_hp_pct - p2_current_hp_pct)
+        p1_damage_received = max(0, p1_last_hp_pct - p1_current_hp_pct)
 
         p1_net_damage += (p1_damage_inflicted - p1_damage_received)
         p1_total_damage_inflicted += p1_damage_inflicted
         p1_total_damage_received += p1_damage_received
 
-        p1_last_hp_pct = p1_current_hp
-        p2_last_hp_pct = p2_current_hp
+        p1_last_hp_pct = p1_current_hp_pct
+        p2_last_hp_pct = p2_current_hp_pct
 
-    epsilon = 1e-7
-    if p1_total_damage_received < epsilon:
+
+    if p1_total_damage_received < 1e-7:
         p1_damage_ratio = p1_total_damage_inflicted
     else:
         p1_damage_ratio = p1_total_damage_inflicted / p1_total_damage_received
@@ -111,23 +111,21 @@ def damage_features(battle: dict) -> dict:
         'p1_damage_ratio': p1_damage_ratio
     }
 
-def switch_difference(battle: dict) -> int:
+def switch_difference(battle: dict) -> int: #verificata
     """
     Restituisce la differenza (p1_switches - p2_switches) contando solo i switch volontari
     (cioè cambi non dovuti a faint).
-    Deve essere definita PRIMA di chiamarla nella tua funzione di feature extraction.
     """
-
     timeline = battle.get('battle_timeline', [])
 
     # Pokémon inizialmente attivi (fallback se mancanti)
-    p1_active = battle.get('p1_team_details', [{}])[0].get('name') if battle.get('p1_team_details') else None
-    p2_active = battle.get('p2_lead_details', {}).get('name', None)
+    p1_active_pokemon = battle.get('p1_team_details', [{}])[0].get('name') if battle.get('p1_team_details') else None
+    p2_active_pokemon = battle.get('p2_lead_details', {}).get('name', None)
 
     # Stato "precedente" per rilevare faint o hp == 0
     # Inizializziamo hp_prev a 1 (100%) come fai nel damage_features
-    p1_prev = {'name': p1_active, 'hp_pct': 1.0, 'status': None}
-    p2_prev = {'name': p2_active, 'hp_pct': 1.0, 'status': None}
+    p1_last_pokemon = {'name': p1_active_pokemon, 'hp_pct': 1.0, 'status': None}
+    p2_last_pokemon = {'name': p2_active_pokemon, 'hp_pct': 1.0, 'status': None}
 
     p1_switches = 0
     p2_switches = 0
@@ -136,40 +134,42 @@ def switch_difference(battle: dict) -> int:
         p1_state = turn.get('p1_pokemon_state', {})
         p2_state = turn.get('p2_pokemon_state', {})
 
-        p1_current = p1_state.get('name')
-        p2_current = p2_state.get('name')
+        p1_current_name = p1_state.get('name')
+        p2_current_name= p2_state.get('name')
 
         # Prendiamo hp_pct e status (fallback a valori sensati se mancanti)
-        p1_hp = p1_state.get('hp_pct', p1_prev.get('hp_pct', 1.0))
-        p2_hp = p2_state.get('hp_pct', p2_prev.get('hp_pct', 1.0))
+        p1_hp_pct = p1_state.get('hp_pct', p1_last_pokemon.get('hp_pct', 1))
+        p2_hp_pct = p2_state.get('hp_pct', p2_last_pokemon.get('hp_pct', 1))
         p1_status = p1_state.get('status', None)
         p2_status = p2_state.get('status', None)
 
-        # --- P1: switch rilevato se nome cambia e precedente NON era fainted (status == 'fnt' o hp == 0)
-        if p1_current and p1_current != p1_prev.get('name'):
-            prev_was_fnt = (p1_prev.get('status') == 'fnt') or (p1_prev.get('hp_pct', 1.0) == 0)
-            if not prev_was_fnt:
-                p1_switches += 1
-            # aggiorna prev alla nuova entry
-            p1_prev['name'] = p1_current
-            p1_prev['hp_pct'] = p1_hp
-            p1_prev['status'] = p1_status
+#se il nome del pokemon corrente è diverso da quello precedente c'è stato un cambio
+        if p1_current_name and p1_current_name != p1_last_pokemon.get('name'):
+            #voglio controllare se il cambio è volontario o no(pokemon faint o ucciso)
+            #creo una variabile vera se si verifica lo status di fainted o se il pokemon non ha più punti
+            involuntary_switch = (p1_last_pokemon.get('status') == 'fnt') or (p1_last_pokemon.get('hp_pct', 1) == 0)
+            if not involuntary_switch:
+                p1_switches += 1 #conto solo gli switch volontari
+            # aggiorna 
+            p1_last_pokemon['name'] = p1_current_name
+            p1_last_pokemon['hp_pct'] = p1_hp_pct
+            p1_last_pokemon['status'] = p1_status
         else:
             # aggiorna solo hp/status se stesso rimane attivo (per il prossimo loop)
-            p1_prev['hp_pct'] = p1_hp
-            p1_prev['status'] = p1_status
+            p1_last_pokemon['hp_pct'] = p1_hp_pct
+            p1_last_pokemon['status'] = p1_status
 
         # --- P2: stesso ragionamento
-        if p2_current and p2_current != p2_prev.get('name'):
-            prev_was_fnt = (p2_prev.get('status') == 'fnt') or (p2_prev.get('hp_pct', 1.0) == 0)
-            if not prev_was_fnt:
+        if p2_current_name and p2_current_name != p2_last_pokemon.get('name'):
+            involuntary_switch = (p2_last_pokemon.get('status') == 'fnt') or (p2_last_pokemon.get('hp_pct', 1.0) == 0)
+            if not involuntary_switch:
                 p2_switches += 1
-            p2_prev['name'] = p2_current
-            p2_prev['hp_pct'] = p2_hp
-            p2_prev['status'] = p2_status
+            p2_last_pokemon['name'] = p2_current_name
+            p2_last_pokemon['hp_pct'] = p2_hp_pct
+            p2_last_pokemon['status'] = p2_status
         else:
-            p2_prev['hp_pct'] = p2_hp
-            p2_prev['status'] = p2_status
+            p2_last_pokemon['hp_pct'] = p2_hp_pct
+            p2_last_pokemon['status'] = p2_status
 
     # Ritorna solo la differenza come richiesto
     return p1_switches - p2_switches

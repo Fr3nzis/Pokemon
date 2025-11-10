@@ -228,13 +228,22 @@ class FeatureHandler:
                 'p1_momentum_score': momentum_score(battle),
                 'switch_diff' : switch_difference(battle),
                 'diff_speed_boost': diff_speed,
-                #'diff_prio':diff_prio
+                'diff_prio':diff_prio,
                 'stab_diff': stab_diff,
                 'x4_eff_diff': x4_eff_diff,
                 'x2_eff_diff': x2_eff_diff,
                 'x0_5_eff_diff': x0_5_eff_diff,
                 'x0_25_eff_diff': x0_25_eff_diff,
-                  })
+                #'p1_accuracy_p2_super_effective_taken':accuracy_1*p2_lead_super_effective_taken,
+                #'p2_accuracy_p1_super_effective_taken':accuracy_2*p1_super_effective_taken,
+                'fainted/switch': (p1_fainted_count - p2_fainted_count)/(switch_difference(battle)+1e-7)
+                #'status_adv_e_diff_base_power':(total_status_advantage)*diff_base_power,
+                #'p1_base_power_p2_super_effective_taken':base_power_1*p2_lead_super_effective_taken,
+                #'p2_base_power_p1_super_effective_taken':base_power_2*p1_super_effective_taken,
+                #'total_status_adv_diff_basepower':total_status_advantage*diff_base_power,
+                #'tot_stat_adv_p2_lead_sup_eff_taken':total_status_advantage*p2_lead_super_effective_taken
+             })
+                  
 
             # DAMAGE FEATURES
             features.update(damage_features(battle))
