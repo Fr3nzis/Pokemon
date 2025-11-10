@@ -1,8 +1,12 @@
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from pk_functions import get_pokemon_types, is_super_effective, momentum_score,damage_features, switch_difference,get_effectiveness, calculate_net_coverage
+from pk_functions import (
+    get_pokemon_types, is_super_effective, momentum_score,
+    damage_features, switch_difference, get_effectiveness, calculate_net_coverage
+)
 from dicts import types, STATUS_PENALTIES, pokemon_types
+
 
 class FeatureHandler:
     def __init__(self, train_data, test_data=None):
@@ -52,10 +56,17 @@ class FeatureHandler:
             p1_stab_hits = p2_stab_hits = 0
             p1_x4_hits = p2_x4_hits = 0
             p1_x2_hits = p2_x2_hits = 0
-            p1_x0_5_hits = p2_x0_5_hits = 0 
-            p1_x0_25_hits = p2_x0_25_hits = 0 
+            p1_x0_5_hits = p2_x0_5_hits = 0
+            p1_x0_25_hits = p2_x0_25_hits = 0
             p2_known_names = set()
-            
+
+            # NEW: tracking stato team e primi KO
+            p1_team_state = {}
+            p2_team_state = {}
+            first_p1_ko_turn = None
+            first_p2_ko_turn = None
+            turn_counter = 1
+
             for turn in timeline:
                 p1_state = turn.get("p1_pokemon_state", {})
                 p2_state = turn.get("p2_pokemon_state", {})
@@ -71,9 +82,29 @@ class FeatureHandler:
                 p2_types = pokemon_types.get(p2_name.lower() if p2_name else None, [])
                 if p2_name:
                     p2_known_names.add(p2_name)
-                
 
-            
+                # NEW: inizializza stato hp/status
+                if p1_name and p1_name not in p1_team_state:
+                    p1_team_state[p1_name] = {'hp_pct': 1.0, 'status': 'nostatus'}
+                if p2_name and p2_name not in p2_team_state:
+                    p2_team_state[p2_name] = {'hp_pct': 1.0, 'status': 'nostatus'}
+                if p1_name and p1_state.get('hp_pct') is not None:
+                    p1_team_state[p1_name]['hp_pct'] = p1_state.get('hp_pct')
+                if p2_name and p2_state.get('hp_pct') is not None:
+                    p2_team_state[p2_name]['hp_pct'] = p2_state.get('hp_pct')
+                if p1_name:
+                    p1_team_state[p1_name]['status'] = p1_status
+                if p2_name:
+                    p2_team_state[p2_name]['status'] = p2_status
+
+                # NEW: registra primo KO
+                if p1_status == 'fnt' or p1_state.get('hp_pct') == 0:
+                    if first_p1_ko_turn is None:
+                        first_p1_ko_turn = turn_counter
+                if p2_status == 'fnt' or p2_state.get('hp_pct') == 0:
+                    if first_p2_ko_turn is None:
+                        first_p2_ko_turn = turn_counter
+
                 # STATUS
                 p1_turn_handicap = STATUS_PENALTIES.get(p1_status, 0)
                 p2_turn_handicap = STATUS_PENALTIES.get(p2_status, 0)
@@ -99,72 +130,37 @@ class FeatureHandler:
                     priority_2 += int(p2_details.get("priority", 0))
                 else:
                     n_null_moves_p2 += 1
-                '''
-                # EFFECTIVENESS SCORE (CUMULATIVE)
-                if p1_details:
-                     p1_move_type = p1_details.get("type", "").lower()
-                     
-                     # 2. Stabiliamo se la mossa fa danno
-                     p1_category = p1_details.get("category", "").upper()
-                     is_damaging_p1 = (p1_category == "PHYSICAL" or p1_category == "SPECIAL")
 
-                     if p1_move_type and p2_name:
-                        # 3. Chiamata corretta alla funzione
-                        eff_p1 = get_effectiveness(
-                            p1_move_type,
-                            p2_types,
-                            attacker_types=p1_types,  # Passa i tipi di P1 per lo STAB
-                            is_damaging=is_damaging_p1 # Passa il flag di danno
-                        )
-                        p1_cumulative_effectiveness += eff_p1
-
-                if p2_details:
-                     p2_move_type = p2_details.get("type", "").lower()
-
-                     # 2. Stabiliamo se la mossa fa danno
-                     p2_category = p2_details.get("category", "").upper()
-                     is_damaging_p2 = (p2_category == "PHYSICAL" or p2_category == "SPECIAL")
-                     
-                     if p2_move_type and p1_name:
-                        # 3. Chiamata corretta alla funzione
-                        eff_p2 = get_effectiveness(
-                            p2_move_type,
-                            p1_types,
-                            attacker_types=p2_types,  # Passa i tipi di P2 per lo STAB
-                            is_damaging=is_damaging_p2 # Passa il flag di danno
-                        )
-                        p2_cumulative_effectiveness += eff_p2'''
-                 
-                 # --- CONTEGGI P1 (MOSSE, EFFICACIA, STAB, ACCURACY, BASE POWER) ---
+                # --- CONTEGGI P1 (MOSSE, EFFICACIA, STAB, ACCURACY, BASE POWER) ---
                 if p1_details and p1_details.get("accuracy") is not None:
                     move_type_p1 = p1_details.get("type", "").lower()
-                    
-                    # STAB
-                    if move_type_p1 in p1_types: p1_stab_hits += 1
-                    
-                    # Efficacia Dettagliata
+                    if move_type_p1 in p1_types:
+                        p1_stab_hits += 1
                     eff_p1 = get_effectiveness(move_type_p1, p2_types)
-                    if eff_p1 == 4: p1_x4_hits += 1
-                    elif eff_p1 == 2: p1_x2_hits += 1
-                    elif eff_p1 == 0.5: p1_x0_5_hits += 1
-                    elif eff_p1 == 0.25: p1_x0_25_hits += 1
-                
+                    if eff_p1 == 4:
+                        p1_x4_hits += 1
+                    elif eff_p1 == 2:
+                        p1_x2_hits += 1
+                    elif eff_p1 == 0.5:
+                        p1_x0_5_hits += 1
+                    elif eff_p1 == 0.25:
+                        p1_x0_25_hits += 1
+
                 # --- CONTEGGI P2 (MOSSE, EFFICACIA, STAB, ACCURACY, BASE POWER) ---
                 if p2_details and p2_details.get("accuracy") is not None:
                     move_type_p2 = p2_details.get("type", "").lower()
-                    
-                    # STAB
-                    if move_type_p2 in p2_types: p2_stab_hits += 1
-                        
-                    # Efficacia Dettagliata
+                    if move_type_p2 in p2_types:
+                        p2_stab_hits += 1
                     eff_p2 = get_effectiveness(move_type_p2, p1_types)
-                    if eff_p2 == 4: p2_x4_hits += 1
-                    elif eff_p2 == 2: p2_x2_hits += 1
-                    elif eff_p2 == 0.5: p2_x0_5_hits += 1
-                    elif eff_p2 == 0.25: p2_x0_25_hits += 1
-                        
-                
-                # --- FINE BLOCCO CORRETTO ---
+                    if eff_p2 == 4:
+                        p2_x4_hits += 1
+                    elif eff_p2 == 2:
+                        p2_x2_hits += 1
+                    elif eff_p2 == 0.5:
+                        p2_x0_5_hits += 1
+                    elif eff_p2 == 0.25:
+                        p2_x0_25_hits += 1
+
                 # SUPER EFFECTIVE CHECK
                 if p2_details and p1_state.get('name'):
                     p2_move_type = p2_details.get("type", "").lower()
@@ -183,7 +179,9 @@ class FeatureHandler:
                 p2_score = (p2_boosts.get('atk', 0) - p1_boosts.get('def', 0)) + \
                            (p2_boosts.get('spa', 0) - p1_boosts.get('spd', 0))
                 cumulative_boost_magnitude_diff += (p1_score - p2_score)
-                diff_speed +=  (p1_boosts.get('spe', 0) - p2_boosts.get('spe', 0)) 
+                diff_speed += (p1_boosts.get('spe', 0) - p2_boosts.get('spe', 0))
+
+                turn_counter += 1
 
             # COVERAGE
             covered_types = set()
@@ -210,11 +208,10 @@ class FeatureHandler:
             x0_25_eff_diff = (p1_x0_25_hits - p2_x0_25_hits) / ntimeline if ntimeline else 0
 
             net_coverage_advantage = calculate_net_coverage(p1_team, p2_known_names)
-            
-            
-            # AGGIUNTA FEATURE FINALI
+
+            # --- AGGIUNTA FEATURE FINALI ---
             features.update({
-                'diff_eff' : diff_eff,
+                #'diff_eff': diff_eff,
                 'total_status_advantage': total_status_advantage,
                 'diff_accuracy': diff_accuracy,
                 'diff_base_power': diff_base_power,
@@ -224,25 +221,43 @@ class FeatureHandler:
                 #'p2_lead_super_effective_taken': p2_lead_super_effective_taken,
                 'diff_null_moves': diff_null_moves,
                 'mean_boost_magnitude_diff': mean_boost_magnitude_diff,
-                'fainted_diff': p1_fainted_count - p2_fainted_count,
-                'p1_momentum_score': momentum_score(battle),
-                'switch_diff' : switch_difference(battle),
-                'diff_speed_boost': diff_speed,
-                #'diff_prio':diff_prio,
-                #'stab_diff': stab_diff,
+                #'fainted_diff': p1_fainted_count - p2_fainted_count,
+                #'p1_momentum_score': momentum_score(battle),
+                'switch_diff': switch_difference(battle),
+                #'diff_speed_boost': diff_speed,
+                #'diff_prio': diff_prio,
+                'stab_diff': stab_diff,
                 'x4_eff_diff': x4_eff_diff,
                 'x2_eff_diff': x2_eff_diff,
                 'x0_5_eff_diff': x0_5_eff_diff,
                 'x0_25_eff_diff': x0_25_eff_diff,
-                #'p1_accuracy_p2_super_effective_taken':accuracy_1*p2_lead_super_effective_taken,
-                'p2_accuracy_p1_super_effective_taken':accuracy_2*p1_super_effective_taken,
-                #'fainted/switch': (p1_fainted_count - p2_fainted_count)/(switch_difference(battle)+1e-7)
-                #'status_adv_e_diff_base_power':(total_status_advantage)*diff_base_power,
-                #'p1_base_power_p2_super_effective_taken':base_power_1*p2_lead_super_effective_taken,
-                #'p2_base_power_p1_super_effective_taken':base_power_2*p1_super_effective_taken,
-                'tot_stat_adv_p2_lead_sup_eff_taken':total_status_advantage*p2_lead_super_effective_taken
-             })
-                  
+                #'fainted/switch': (p1_fainted_count - p2_fainted_count) / (switch_difference(battle) + 1e-7),
+                #'status_adv_e_diff_base_power': (total_status_advantage) * diff_base_power,
+                #'p1_base_power_p2_super_effective_taken': base_power_1 * p2_lead_super_effective_taken,
+                #'p2_base_power_p1_super_effective_taken': base_power_2 * p1_super_effective_taken,
+                #'tot_stat_adv_p2_lead_sup_eff_taken': total_status_advantage * p2_lead_super_effective_taken
+            })
+
+            # --- NEW: aggiunte finali da secondo codice ---
+            p1_alive = sum(1 for info in p1_team_state.values() if info['status'] != 'fnt')
+            p2_alive = sum(1 for info in p2_team_state.values() if info['status'] != 'fnt')
+            p1_total_hp = sum(max(0, info.get('hp_pct', 0)) for info in p1_team_state.values())
+            p2_total_hp = sum(max(0, info.get('hp_pct', 0)) for info in p2_team_state.values())
+            p1_fainted_final = len(p1_team_state) - p1_alive
+            p2_fainted_final = len(p2_team_state) - p2_alive
+            p1_first_ko_feature = first_p1_ko_turn if first_p1_ko_turn is not None else ntimeline + 1
+            p2_first_ko_feature = first_p2_ko_turn if first_p2_ko_turn is not None else ntimeline + 1
+
+            features.update({
+                'p1_turns_until_first_ko': p1_first_ko_feature,
+                'p2_turns_until_first_ko': p2_first_ko_feature,
+                'p1_final_alive': p1_alive,
+                'p2_final_alive': p2_alive,
+                'p1_final_fainted': p1_fainted_final,
+                'p2_final_fainted': p2_fainted_final,
+                'p1_final_hp_sum': p1_total_hp,
+                'p2_final_hp_sum': p2_total_hp
+            })
 
             # DAMAGE FEATURES
             features.update(damage_features(battle))
