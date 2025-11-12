@@ -41,7 +41,7 @@ voting_clf = VotingClassifier(
         ('xgb', xgb_best),
         ('knn', knn_best)
     ],
-    voting='hard',   # media delle probabilità
+    voting='soft',   # media delle probabilità
     n_jobs=-1
 )
 

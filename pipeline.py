@@ -7,14 +7,15 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # Percorsi aggiornati
 pipeline = [
-    "dicts.py",
-    "data_processing.py",
-    "pk_functions.py",
-    "features_ext.py",
-    "set_up.py",
+    "set_up_scripts/dicts.py",
+    "set_up_scripts/data_processing.py",
+    "set_up_scripts/pk_functions.py",
+    "set_up_scripts/features_ext.py",
+    "set_up_scripts/set_up.py",
     "models/tuning_function.py",
     "models/tuned_models_generation.py",
-    "models/stacking_model_generation.py"
+    "models/stacking_funtction.py",
+    "models/stacking_model_gen.py"
 
 
 
