@@ -6,3 +6,4 @@ data/*.pkl
 data/*.csv
 models/roba/*.pkl
 *.ipynb_checkpoints
+.vscode

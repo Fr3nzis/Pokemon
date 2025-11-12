@@ -13,9 +13,11 @@ pipeline = [
     "set_up_scripts/features_ext.py",
     "set_up_scripts/set_up.py",
     "models/tuning_function.py",
-    "models/tuned_models_generation.py",
-    "models/stacking_funtction.py",
-    "models/stacking_model_gen.py"
+    "models/tuned_models_generation.py",   
+    "models/stacking_functions.py",
+    "models/staking_model_generation.py"
+    
+
 
 
 

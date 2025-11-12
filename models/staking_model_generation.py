@@ -12,7 +12,6 @@ from stacking_functions import (
 
 MODEL_DIR = "models/generated_models"
 
-
 # 1. Carica dati
 X_train, X_test, Y_train, test_df = load_data()
 

@@ -35,7 +35,7 @@ def tune_model(model_name: str, X_train: pd.DataFrame, Y_train: pd.Series):
 
     models_config = {
         'logistic_regression': (
-            LogisticRegression(random_state=42, max_iter=1000),
+            LogisticRegression(random_state=123, max_iter=1000),
             {
                 'C': [0.01, 0.1, 1, 10, 100],
                 'penalty': ['l1', 'l2'],
@@ -81,7 +81,7 @@ def tune_model(model_name: str, X_train: pd.DataFrame, Y_train: pd.Series):
             }
         ),
         'xgboost': (
-            XGBClassifier(random_state=42, eval_metric='logloss', n_jobs=-1),
+            XGBClassifier(random_state=123, eval_metric='logloss', n_jobs=-1),
             {
                 'n_estimators': [100, 250],
                 'learning_rate': [0.01, 0.1],

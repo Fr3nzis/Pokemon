@@ -3,9 +3,8 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from pk_functions import (
-    damage_features, switch_difference, get_effectiveness, 
-    diff_coverage_advantage
-)
+    damage_features, switch_difference, get_effectiveness 
+    )
 from dicts import status_penalties, pokemon_types
 
 
@@ -182,7 +181,6 @@ class FeatureHandler:
 
             #aggiunta features
             features.update({
-                'diff_coverage_advantage': diff_coverage_advantage(p1_team, p2_known_names), #da controllare
                 'diff_status_penalties': diff_status_penalties, #
                 'diff_accuracy': diff_accuracy,#
                 'diff_base_power': diff_base_power,#
