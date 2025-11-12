@@ -152,7 +152,7 @@ pokemon_types = {
     'mew': ['psychic', 'notype']
 }
 
-STATUS_PENALTIES = {
+status_penalties = {
     "frz": -100, # Congelamento: quasi un K.O.
     "slp": -75,  # Sonno: disabilita completamente
     "par": -40,  # Paralisi: penalità media statica

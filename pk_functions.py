@@ -1,63 +1,4 @@
-import math
 from dicts import GEN1_TYPE_CHART,pokemon_types,types
-
-
-def get_pokemon_types(battle_details, pokemon_name):
-    """
-    Cerca i tipi di un Pokémon nei dettagli statici della squadra P1 o del Lead di P2.
-    Restituisce una lista di tipi in minuscolo, escludendo 'notype'.
-    """
-    for p in battle_details.get('p1_team_details', []):
-        if p.get('name') == pokemon_name:
-            return [t.lower() for t in p.get('types', []) if t and t.lower() != 'notype']
-
-    p2_lead = battle_details.get('p2_lead_details', {})
-    if p2_lead.get('name') == pokemon_name:
-        return [t.lower() for t in p2_lead.get('types', []) if t and t.lower() != 'notype']
-
-    return []
-
-
-def is_super_effective(move_type: str, defender_types: list[str], type_chart: dict) -> bool:
-    """
-    Restituisce True se la mossa è super efficace contro almeno un tipo difensivo.
-    """
-    move_type = (move_type or "").lower()
-    if move_type not in type_chart:
-        return False
-    return any(def_type in type_chart[move_type] for def_type in defender_types)
-
-
-def momentum_score(battle):  #verificata
-    """
-    Calcola un punteggio di momentum:
-    - Conta i turni dove P1 infligge più danno di quanto ne subisca.
-    - Valorizza le serie consecutive di turni favorevoli (streaks).
-    """
-    timeline = battle.get("battle_timeline", [])
-    p1_last_hp_pct = 1
-    p2_last_hp_pct = 1
-    p1_momentum_turns = 0
-    p1_current_streak = 0
-    p1_max_streak = 0
-
-    for turn in timeline:
-        p1_hp_pct = turn.get("p1_pokemon_state", {}).get("hp_pct", p1_last_hp_pct)
-        p2_hp_pct = turn.get("p2_pokemon_state", {}).get("hp_pct", p2_last_hp_pct)
-
-        p1_damage_inflicted = max(0, p2_last_hp_pct - p2_hp_pct)
-        p1_damage_received = max(0, p1_last_hp_pct - p1_hp_pct)
-
-        if p1_damage_inflicted > p1_damage_received:
-            p1_momentum_turns += 1
-            p1_current_streak += 1
-            p1_max_streak = max(p1_max_streak, p1_current_streak)
-        else:
-            p1_current_streak = 0
-
-        p1_last_hp_pct, p2_last_hp_pct = p1_hp_pct, p2_hp_pct
-
-    return p1_momentum_turns + (0.5 * p1_max_streak)
 
 
 def damage_features(battle: dict) -> dict: #verificata
@@ -196,26 +137,24 @@ def get_effectiveness(move_type, opponent_types):
     return effectiveness
 
 
-def calculate_net_coverage(p1_team_details, p2_known_names):
+def diff_coverage_advantage(p1_team_details, p2_known_names): #DA CONTROLLARE
     """
-    Calcola il vantaggio netto di copertura (P1 vs P2) basandosi
-    sulla squadra completa di P1 e sui Pokémon noti di P2.
-    
+    Viene calcolato il vantaggio di copertura (P1 vs P2).
     Quantifica:
-    - P1 Score: Quanti dei Pokémon noti di P2 la squadra di P1 può colpire SE (Super Efficace).
-    - P2 Score: Quanti dei Pokémon di P1 i Pokémon noti di P2 possono colpire SE.
+    - P1 Score: Quanti dei Pokémon noti di P2 la squadra di P1 può colpire con mosse super efficaci
+    - P2 Score: Quanti dei Pokémon di P1 i Pokémon noti di P2 possono colpire con mosse super efficaci
     """
     
-    # 1. Ottieni i tipi offensivi di P1 (dalla squadra completa)
-    p1_att_types = set()
-    for p in p1_team_details:
-        p1_types = p.get('types', [])
-        for t in p1_types:
-            if t and t.lower() != 'notype':
-                p1_att_types.add(t.lower())
+    #Prendiamo i pokemon di tipo attacco di P1 (squadra completa)
+    p1_attack_types = set()
+    for pokemon in p1_team_details:
+        p1_types = pokemon.get('types', [])
+        for t in p1_types: 
+            if t and t.lower()!= 'notype':
+                p1_attack_types.add(t.lower())
 
     # 2. Ottieni i tipi difensivi di P1 (dalla squadra completa)
-    p1_def_types = p1_att_types # In Gen 1, Tipi Off = Tipi Def
+    p1_defensive_types = p1_attack_types # In Gen 1, Tipi Off = Tipi Def
     
     # 3. Ottieni i tipi offensivi e difensivi di P2 (SOLO dai Pokémon noti)
     p2_known_types = set()
@@ -231,7 +170,7 @@ def calculate_net_coverage(p1_team_details, p2_known_names):
     # 4. Calcola Punteggio P1 (P1 Offesa vs P2 Difesa)
     # Quanti dei tipi difensivi noti di P2 sono coperti da P1?
     p1_coverage_score = 0
-    for p1_att in p1_att_types:
+    for p1_att in p1_attack_types:
         if p1_att in types: # 'types' è il dizionario di efficacia offensiva
             for p2_def in p2_def_types:
                 if p2_def in types[p1_att]:
@@ -243,7 +182,7 @@ def calculate_net_coverage(p1_team_details, p2_known_names):
     p2_coverage_score = 0
     for p2_att in p2_att_types:
         if p2_att in types:
-            for p1_def in p1_def_types:
+            for p1_def in p1_defensive_types:
                 if p1_def in types[p2_att]:
                     p2_coverage_score += 1
                     break # Trovato, passa al prossimo tipo offensivo di P2

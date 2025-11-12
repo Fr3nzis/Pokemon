@@ -44,6 +44,6 @@ df_test.to_csv("data/df_test.csv", index=False)
 processor = DataProcessor(df_train, df_test)
 Y_train, X_train, X_test = processor.prepare_data()
 
-#print(df_train['diff_prio'].value_counts())
+
  
 
