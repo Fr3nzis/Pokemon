@@ -1,11 +1,9 @@
-# run_pipeline.py
 import subprocess
 import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# Percorsi aggiornati
 pipeline = [
     "set_up_scripts/dicts.py",
     "set_up_scripts/data_processing.py",
@@ -16,11 +14,7 @@ pipeline = [
     "models/tuned_models_generation.py",   
     "models/stacking_functions.py",
     "models/staking_model_generation.py"
-    
-
-
-
-
+    "models/voting_model.py"   
 ]
 
 print("\n=== Avvio pipeline Pokémon Battles ===\n")

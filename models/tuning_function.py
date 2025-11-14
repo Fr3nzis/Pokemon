@@ -39,13 +39,13 @@ def tune_model(model_name: str, X_train: pd.DataFrame, Y_train: pd.Series):
             {
                 'C': [0.01, 0.1, 1, 10, 100],
                 'penalty': ['l1', 'l2'],
-                'solver': ['liblinear', 'saga']
+                'solver': ['liblinear']
             }
         ),
         'knn': (
             KNeighborsClassifier(),
             {
-                'n_neighbors': [3, 5, 7, 9, 11, 13],
+                'n_neighbors':[n for n in range(3, 100, 2)], 
                 'weights': ['uniform', 'distance'],
                 'metric': ['euclidean', 'manhattan']
             }
@@ -54,7 +54,7 @@ def tune_model(model_name: str, X_train: pd.DataFrame, Y_train: pd.Series):
             DecisionTreeClassifier(random_state=42),
             {
                 'criterion': ['gini', 'entropy'],
-                'max_depth': [5, 10, 15, 20],
+                'max_depth': [n for n in range(3, 15)], 
                 'min_samples_split': [2, 5, 10],
                 'min_samples_leaf': [1, 2]
             }
@@ -62,13 +62,14 @@ def tune_model(model_name: str, X_train: pd.DataFrame, Y_train: pd.Series):
         'random_forest': (
             RandomForestClassifier(random_state=42, n_jobs=-1),
             {
-                'n_estimators': [100],
-                'max_depth': [10, 20],
-                'min_samples_split': [2, 5],
-                'min_samples_leaf': [1, 3],
+                'n_estimators': [100,200],
+                'max_depth': [10,20], 
+                'min_samples_split': [n for n in range(2, 6)], 
+                'min_samples_leaf': [n for n in range(1, 4)], 
                 'max_features': ['sqrt']
             }
         ),
+
         'adaboost': (
             AdaBoostClassifier(random_state=42),
             {
@@ -83,10 +84,10 @@ def tune_model(model_name: str, X_train: pd.DataFrame, Y_train: pd.Series):
         'xgboost': (
             XGBClassifier(random_state=123, eval_metric='logloss', n_jobs=-1),
             {
-                'n_estimators': [100, 250],
-                'learning_rate': [0.01, 0.1],
+                'n_estimators': [100, 170, 250],
+                'learning_rate': [0.01, 0.05, 0.1],
                 'max_depth': [3, 5, 7],
-                'min_child_weight': [1, 3]
+                'min_child_weight': [1,3]
             }
         )
     }

@@ -1,10 +1,6 @@
 import json
-import pandas as pd
 import os
-from tqdm import tqdm
-import numpy as np
-import pandas as pd
-from sklearn.preprocessing import StandardScaler
+
 
 
 class DataHandler:
@@ -48,7 +44,6 @@ class DataHandler:
         print("\n--- Structure of the first train battle: ---")
         first_battle = self.train_data[0]
 
-        # Copia e troncamento della timeline per la visualizzazione
         battle_for_display = first_battle.copy()
         battle_for_display['battle_timeline'] = battle_for_display.get('battle_timeline', [])[:2]
 
@@ -67,16 +62,13 @@ class DataProcessor:
 
     def prepare_data(self):
         """Prepara X_train, Y_train e X_test per i modelli ML"""
-        # Colonne da escludere
         drop_cols = ['battle_id', 'player_won']
         features = [col for col in self.train_df.columns if col not in drop_cols]
 
-        # Split
         X_train = self.train_df[features]
         Y_train = self.train_df['player_won']
         X_test = self.test_df[features]
 
-        # Salvataggio
         X_train.to_pickle(f"{self.save_dir}/X_train.pkl")
         X_train.to_csv(f"{self.save_dir}/X_train.csv", index=False)
 

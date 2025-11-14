@@ -27,18 +27,18 @@ pokemon_types = {
     'raichu': ['electric', 'notype'],
     'sandshrew': ['ground', 'notype'],
     'sandslash': ['ground', 'notype'],
-    'nidoranf': ['poison', 'notype'], # Nidoran♀
+    'nidoranf': ['poison', 'notype'], 
     'nidorina': ['poison', 'notype'],
     'nidoqueen': ['poison', 'ground'],
-    'nidoranm': ['poison', 'notype'], # Nidoran♂
+    'nidoranm': ['poison', 'notype'], 
     'nidorino': ['poison', 'notype'],
     'nidoking': ['poison', 'ground'],
-    'clefairy': ['normal', 'notype'], # Nota: In Gen 1, Clefairy è 'normal', non 'fairy'
-    'clefable': ['normal', 'notype'], # Nota: In Gen 1, Clefable è 'normal', non 'fairy'
+    'clefairy': ['normal', 'notype'], 
+    'clefable': ['normal', 'notype'], 
     'vulpix': ['fire', 'notype'],
     'ninetales': ['fire', 'notype'],
-    'jigglypuff': ['normal', 'notype'], # Nota: In Gen 1, Jigglypuff è 'normal', non 'fairy'
-    'wigglytuff': ['normal', 'notype'], # Nota: In Gen 1, Wigglytuff è 'normal', non 'fairy'
+    'jigglypuff': ['normal', 'notype'], 
+    'wigglytuff': ['normal', 'notype'], 
     'zubat': ['poison', 'flying'],
     'golbat': ['poison', 'flying'],
     'oddish': ['grass', 'poison'],
@@ -79,8 +79,8 @@ pokemon_types = {
     'rapidash': ['fire', 'notype'],
     'slowpoke': ['water', 'psychic'],
     'slowbro': ['water', 'psychic'],
-    'magnemite': ['electric', 'notype'], # Nota: In Gen 1, Magnemite è 'electric', non 'electric/steel'
-    'magneton': ['electric', 'notype'], # Nota: In Gen 1, Magneton è 'electric', non 'electric/steel'
+    'magnemite': ['electric', 'notype'], 
+    'magneton': ['electric', 'notype'], 
     'farfetchd': ["normal", "flying"],
     'doduo': ['normal', 'flying'],
     'dodrio': ['normal', 'flying'],
@@ -120,7 +120,7 @@ pokemon_types = {
     'seaking': ['water', 'notype'],
     'staryu': ['water', 'notype'],
     'starmie': ['water', 'psychic'],
-    'mr-mime': ['psychic', 'notype'], # Mr. Mime
+    'mr-mime': ['psychic', 'notype'], 
     'scyther': ['bug', 'flying'],
     'jynx': ['ice', 'psychic'],
     'electabuzz': ['electric', 'notype'],
@@ -153,32 +153,16 @@ pokemon_types = {
 }
 
 status_penalties = {
-    "frz": -100, # Congelamento: quasi un K.O.
-    "slp": -75,  # Sonno: disabilita completamente
-    "par": -40,  # Paralisi: penalità media statica
-    "tox": -25,  # Iperavvelenamento: danno crescente
-    "brn": -15,  # Scottatura
-    "psn": -15,  # Avvelenamento
+    #"frz": -100, 
+    "slp": -75,  
+    "par": -40,  
+    "tox": -25,  
+    "brn": -15,  
+    "psn": -15,  
      "nostatus": 0}
         
-types = {
-    "fire": ["grass", "ice", "bug", "steel"],
-    "water": ["fire", "ground", "rock"],
-    "grass": ["water", "ground", "rock"],
-    "electric": ["water", "flying"],
-    "ice": ["grass", "ground", "flying", "dragon"],
-    "fighting": ["normal", "ice", "rock", "dark", "steel"],
-    "poison": ["grass", "fairy"],
-    "ground": ["electric", "fire", "poison", "rock", "steel"],
-    "flying": ["fighting", "bug", "grass"],
-    "psychic": ["fighting", "poison"],
-    "bug": ["grass", "psychic", "dark"],
-    "rock": ["fire", "ice", "flying", "bug"],
-    "ghost": ["psychic", "ghost"],
-    "dragon": ["dragon"]
-    }
 
-GEN1_TYPE_CHART = {
+gen1_type = {
     'normal': {'rock': 0.5, 'ghost': 0.0},
     'fighting': {'normal': 2.0, 'poison': 0.5, 'flying': 0.5, 'psychic': 0.5, 'bug': 0.5, 'rock': 2.0, 'ghost': 0.0, 'ice': 2.0},
     'flying': {'fighting': 2.0, 'bug': 2.0, 'grass': 2.0, 'electric': 0.5, 'rock': 0.5},
@@ -186,11 +170,11 @@ GEN1_TYPE_CHART = {
     'ground': {'fire': 2.0, 'electric': 2.0, 'poison': 2.0, 'flying': 0.0, 'bug': 0.5, 'rock': 2.0, 'grass': 0.5},
     'rock': {'fire': 2.0, 'ice': 2.0, 'fighting': 0.5, 'ground': 0.5, 'flying': 2.0, 'bug': 2.0},
     'bug': {'fire': 0.5, 'poison': 2.0, 'fighting': 0.5, 'flying': 0.5, 'psychic': 2.0, 'ghost': 0.5, 'grass': 2.0},
-    'ghost': {'normal': 0.0, 'psychic': 0.0, 'ghost': 2.0}, # Nota: Bug Gen 1, Psico immune a Spettro
+    'ghost': {'normal': 0.0, 'psychic': 0.0, 'ghost': 2.0}, 
     'fire': {'fire': 0.5, 'water': 0.5, 'bug': 2.0, 'rock': 0.5, 'ice': 2.0, 'grass': 2.0, 'dragon': 0.5},
     'water': {'fire': 2.0, 'water': 0.5, 'ground': 2.0, 'rock': 2.0, 'ice': 1.0, 'grass': 0.5, 'dragon': 0.5},
     'grass': {'fire': 0.5, 'water': 2.0, 'poison': 0.5, 'ground': 2.0, 'flying': 0.5, 'bug': 0.5, 'rock': 2.0, 'dragon': 0.5},
     'electric': {'water': 2.0, 'electric': 0.5, 'ground': 0.0, 'flying': 2.0, 'grass': 0.5, 'dragon': 0.5},
-    'psychic': {'fighting': 2.0, 'poison': 2.0, 'psychic': 0.5, 'ghost': 0.0}, # Bug Gen 1: Psico immune a Spettro
+    'psychic': {'fighting': 2.0, 'poison': 2.0, 'psychic': 0.5, 'ghost': 0.0}, 
     'ice': {'water': 0.5, 'ground': 2.0, 'flying': 2.0, 'ice': 0.5, 'grass': 2.0, 'dragon': 2.0},
     'dragon': {'dragon': 2.0}}

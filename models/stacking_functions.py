@@ -4,8 +4,6 @@ import pandas as pd
 from sklearn.ensemble import StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import KFold, cross_val_score, GridSearchCV
-from sklearn.metrics import accuracy_score
-
 MODEL_DIR = "models/generated_models"
 DATA_DIR = "data"
 
@@ -27,18 +25,39 @@ def load_scaler(X_train, X_test):
     X_train_scaled = scaler.transform(X_train)
     X_test_scaled = scaler.transform(X_test)
     return X_train_scaled, X_test_scaled
-
+'''
 def load_base_models():
     logreg_best = load_pickle(os.path.join(MODEL_DIR, "logistic_regression_best_model.pkl"))
     xgb_best = load_pickle(os.path.join(MODEL_DIR, "xgboost_best_model.pkl"))
     knn_best = load_pickle(os.path.join(MODEL_DIR, "knn_best_model.pkl"))
     return logreg_best, xgb_best, knn_best
+    '''
 
+def load_base_models():
+    logreg_best = load_pickle(os.path.join(MODEL_DIR, "logistic_regression_best_model.pkl"))
+    xgb_best = load_pickle(os.path.join(MODEL_DIR, "xgboost_best_model.pkl"))
+    return logreg_best, xgb_best
+'''
 def build_stacking_model(logreg_best, xgb_best, knn_best):
     base_models = [
         ('logreg', logreg_best),
         ('xgb', xgb_best),
         ('knn', knn_best)
+    ]
+    meta_model = LogisticRegression(random_state=123, max_iter=1000)
+    stack_model = StackingClassifier(
+        estimators=base_models,
+        final_estimator=meta_model,
+        cv=5,
+        passthrough=False,
+        n_jobs=-1
+    )
+    return stack_model
+'''
+def build_stacking_model(logreg_best, xgb_best):
+    base_models = [
+        ('logreg', logreg_best),
+        ('xgb', xgb_best)
     ]
     meta_model = LogisticRegression(random_state=123, max_iter=1000)
     stack_model = StackingClassifier(
