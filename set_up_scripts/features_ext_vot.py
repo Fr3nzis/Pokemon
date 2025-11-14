@@ -2,8 +2,8 @@
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from pk_functions import damage_features, switch_difference, get_effectiveness
-from dicts import status_penalties, pokemon_types
+from set_up_scripts.pk_functions import damage_features, switch_difference, get_effectiveness
+from set_up_scripts.dicts import status_penalties, pokemon_types
 
 
 class FeatureHandler:

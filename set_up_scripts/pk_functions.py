@@ -1,4 +1,4 @@
-from dicts import gen1_type
+from set_up_scripts.dicts import gen1_type
 
 
 def damage_features(battle: dict) -> dict: 
@@ -122,5 +122,4 @@ def get_effectiveness(move_type, opponent_types):
         return 1
                 
     return effectiveness
-
 

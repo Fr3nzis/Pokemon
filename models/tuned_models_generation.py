@@ -1,14 +1,18 @@
-from tuning_function import tune_model
 import pandas as pd
 
-#DATI:
-X_train = pd.read_pickle("data/X_train.pkl")
-X_test = pd.read_pickle("data/X_test.pkl")
-Y_train = pd.read_pickle("data/Y_train.pkl")
-test_df = pd.read_pickle('data/df_test.pkl')
+from models.tuning_function import tune_model
+
+DATA_DIR = "data"
 
 
-for m in ['xgboost','logistic_regression','adaboost']:
-    tune_model(m,X_train,Y_train)
+def main():
+    X_train = pd.read_pickle(f"{DATA_DIR}/X_train.pkl")
+    Y_train = pd.read_pickle(f"{DATA_DIR}/Y_train.pkl")
 
+    for model_name in ["xgboost", "logistic_regression", "adaboost"]:
+        tune_model(model_name, X_train, Y_train)
+
+
+if __name__ == "__main__":
+    main()
 

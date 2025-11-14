@@ -1,33 +1,19 @@
-import subprocess
-import sys
-from pathlib import Path
+from set_up_scripts import set_up
+from models import tuned_models_generation
+from models import stacking_model_generation
+from models import logistic
 
-BASE_DIR = Path(__file__).resolve().parent
 
-pipeline = [
-    "set_up_scripts/dicts.py",
-    "set_up_scripts/data_processing.py",
-    "set_up_scripts/pk_functions.py",
-    "set_up_scripts/features_ext.py",
-    "set_up_scripts/set_up.py",
-    "models/tuning_function.py",
-    "models/tuned_models_generation.py",   
-    "models/stacking_functions.py",
-    "models/staking_model_generation.py",
-    "models/logistic.py"   
-]
+def main():
+    print("\n=== Avvio pipeline Pokémon Battles ===\n")
 
-print("\n=== Avvio pipeline Pokémon Battles ===\n")
+    set_up.main()
+    tuned_models_generation.main()
+    stacking_model_generation.main()
+    logistic.main()
 
-for script in pipeline:
-    path = BASE_DIR / script
-    if not path.exists():
-        print(f"File non trovato: {path}")
-        sys.exit(1)
-    print(f" Esecuzione: {script}")
-    result = subprocess.run([sys.executable, str(path)])
-    if result.returncode != 0:
-        print(f" Errore durante l'esecuzione di {script}")
-        sys.exit(result.returncode)
+    print("\n=== Pipeline completata con successo ===\n")
 
-print("\nPipeline completata con successo.\n")
+
+if __name__ == "__main__":
+    main()
