@@ -8,13 +8,11 @@ pipeline = [
     "set_up_scripts/dicts.py",
     "set_up_scripts/data_processing.py",
     "set_up_scripts/pk_functions.py",
-    "set_up_scripts/features_ext.py",
-    "set_up_scripts/set_up.py",
+    "set_up_scripts/features_ext_vot.py",
+    "set_up_scripts/set_up_vot.py",
     "models/tuning_function.py",
     "models/tuned_models_generation.py",   
-    "models/stacking_functions.py",
-    "models/staking_model_generation.py",
-    "models/logistic.py"   
+    "models/voting_model.py"   
 ]
 
 print("\n=== Avvio pipeline Pokémon Battles ===\n")

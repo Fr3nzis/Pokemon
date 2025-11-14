@@ -1,9 +1,9 @@
 fds-pokemon-battles-prediction-2025/train.jsonl
 fds-pokemon-battles-prediction-2025/test.jsonl
-__pycache__/
+_pycache_/
 .DS_Store
 data/*.pkl
 data/*.csv
-models/roba/*.pkl
+models/generated_models/*.pkl
 *.ipynb_checkpoints
 .vscode
